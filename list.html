@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en"> 
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+    <link href="style.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col">
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" placeholder="Grocery Item" aria-label="Recipient's username" aria-describedby="button-addon2">
+                    <div class="input-group-append">
+                      <button class="btn btn-outline-secondary" type="button" id="button-addon2" onclick="addItem()">add it</button>
+                    </div>
+                  </div>                  
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <ul class="list-group">
+                   
+                </ul>
+            </div>
+        </div>
+        
+    </div>
+    <script>
+
+        var dict = { }
+        var skipped_dict = {}
+
+        function create_UUID(){
+            var dt = new Date().getTime();
+            var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = (dt + Math.random()*16)%16 | 0;
+                dt = Math.floor(dt/16);
+                return (c=='x' ? r :(r&0x3|0x8)).toString(16);
+            });
+            return uuid;
+        };
+
+        function updateDatabase(){};
+
+        function ifExists(name){
+            for(var key in dict){
+                if(name == dict[key]){
+                    return true;
+                    break;
+                }
+            }
+            return false;
+        };
+
+        function addItem() {
+
+            item_name = $('.form-control').val()
+
+            if(ifExists(item_name)){
+                console.log("value already exists");
+            }else if(item_name == ""){
+                console.log("value cannot be blank");
+            }else{
+
+                var item_UUID = create_UUID()
+
+                dict[item_UUID] = item_name
+
+                var d = $(document.createElement("div")).addClass("list-group-item lead").text(item_name).attr("id",item_UUID)
+                var bg = $(document.createElement("div")).addClass("btn-group float-right")
+                var b = $(document.createElement("Button")).addClass("btn btn-outline-primary").text("Got it").click(function(){removeItem(d)})
+                var b2 = $(document.createElement("Button")).addClass("btn btn-outline-primary").text("Skipped it").click(function(){skipItem(d)})
+
+                bg.append(b).append(b2)
+
+                d.append(bg)
+                
+                //var list_item = $("<button></button>").text(item_name).addClass("list-group-item btn btn-outline-primary").attr("id",item_UUID).click(function(){removeItem(this)});
+
+                var list = $(".list-group");
+                //list.append(list_item);
+                list.append(d)
+
+                console.log(item_name+ " Created")
+            }
+
+        };
+
+        function removeItem(item){
+            item = $(item)
+            dict_temp = { };
+            console.log("looking for " + item.attr("id"))
+            for(var key in dict){
+
+                if(key == item.attr("Id")){
+
+                }else{
+
+                    dict_temp[key] = dict[key];
+                }
+            }
+
+            dict = dict_temp
+
+            item.remove()
+        };
+
+        function skipItem(item){
+            item = $(item)
+            skipped_dict[item.attr("Id")] = dict[item.attr("Id")]
+            
+            dict_temp = { };
+
+            for(var key in dict){
+
+                if(key == item.attr("Id")){
+
+                }else{
+
+                    dict_temp[key] = dict[key];
+                }
+            }
+
+            
+
+            dict = dict_temp
+
+            item.remove()
+
+        }
+
+
+        
+
+
+
+
+
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
+
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>
+    
+</body>
