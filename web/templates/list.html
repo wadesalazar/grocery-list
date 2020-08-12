@@ -40,8 +40,9 @@
         var skipped_dict = {}
 
         var sync
-
         var timeout
+
+        var update_required = false
         
         function create_UUID(){
             var dt = new Date().getTime();
@@ -106,8 +107,39 @@
             }
 
             updateLocalStorage()
-            syncStart()
+
+            update_required = true
+
             $(".form-control").val("")
+
+        };
+
+        function addItem2(item_name, item_UUID) {
+
+            if(ifExists(item_name)){
+                //console.log("value already exists");
+            }else if(item_name == ""){
+                //console.log("value cannot be blank");
+            }else{
+
+                var list = $(".list-group");
+
+                dict[item_UUID] = item_name
+
+                var d = $(document.createElement("div")).addClass("list-group-item lead").text(item_name).attr("id",item_UUID)
+                var bg = $(document.createElement("div")).addClass("btn-group float-right")
+                var b = $(document.createElement("Button")).addClass("btn btn-outline-primary").text("Got it").click(function(){removeItem(d)})
+                var b2 = $(document.createElement("Button")).addClass("btn btn-outline-primary").text("Skipped it").click(function(){skipItem(d)})
+
+                bg.append(b).append(b2)
+
+                d.append(bg)
+
+                list.append(d)
+
+            }
+
+            updateLocalStorage()
 
         };
 
@@ -138,7 +170,6 @@
             }
 
             updateLocalStorage()
-
             $(".form-control").val("")
 
         };
@@ -160,7 +191,9 @@
 
             dict = dict_temp
             updateLocalStorage()
-            syncStart()
+
+            update_required = true
+
             item.remove()
         };
 
@@ -182,34 +215,67 @@
             skipped_dict[item.attr("Id")] = dict[item.attr("Id")]
             dict = dict_temp
             updateLocalStorage()
+
+            update_required = true
+
             item.remove()
 
         }
 
-        function syncStart(){
-            sync = setInterval(function(){updateDatabase()},5000)
+        function sync(){
+            if(update_required){
+                updateDatabase()
+                update_required = false
+            }
 
-            timeout = setTimeout(function(){syncStop()},20000)
+            $.get("api/get-list").then(function(e){
+                if(e == '{}'){
+                //assume there are no items on list remote
+                }else{
+                    blist = JSON.parse(e);
+
+                    //check remote list difference
+                    for (const [key, value] of Object.entries(blist)) {
+                        if(!ifExists(blist[key])){
+                            addItem2(blist[key], key)
+                        }
+                    }
+                    //check local list difference
+                    for(key in dict){
+                        if(blist[key] == null){
+                            removeItem($('#'+key))
+                        }
+                    }
+                }      
+            })
+
+        }
+
+        function syncStart(){
+            syncHandle = setInterval(function(){sync()},5000)
+
+            
+
 
         }
 
         function syncStop(){
-            clearInterval(sync)
+            clearInterval(syncHandle)
         }
 
         function initDocument(){
 
-            var list = JSON.parse( localStorage.getItem('grocery-list') )
+            var alist = JSON.parse( localStorage.getItem('grocery-list') )
 
-            if(list == null){
+            if(alist == null || $.isEmptyObject(alist) ){
                 
                 $.get("api/get-list").then(function(e){
                    if(e == '{}'){
                     //assume there are no items on list remote
                    }else{
                         
-                        var list = JSON.parse(e);
-                        for (const [key, value] of Object.entries(list)) {
+                        alist = JSON.parse(e);
+                        for (const [key, value] of Object.entries(alist)) {
                             displayItem(value, key)
                         }
                    }      
