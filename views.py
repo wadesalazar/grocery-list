@@ -10,7 +10,6 @@ async def index(request):
 async def update_list(request):
 
     data = await request.text()
-    print(data)
     f = open("grocery-list.json",'wt')
     f.writelines(data)
     f.close

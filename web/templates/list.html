@@ -38,6 +38,8 @@
 
         var dict = { }
         var skipped_dict = {}
+
+        var sync
         
         function create_UUID(){
             var dt = new Date().getTime();
@@ -52,14 +54,15 @@
         function updateLocalStorage(){
 
             localStorage.setItem('grocery-list',JSON.stringify(dict))
-
             localStorage.setItem('skipped-list',JSON.stringify(skipped_dict))
 
         };
 
         function updateDatabase(){
-            
-            $.post("/api/update-list", JSON.stringify(dict))
+
+            var list = JSON.parse( localStorage.getItem('grocery-list') ) 
+            $.post("/api/update-list", JSON.stringify(list))
+
         };
 
         function ifExists(name){
@@ -77,9 +80,9 @@
             var item_name = $('.form-control').val()
 
             if(ifExists(item_name)){
-                console.log("value already exists");
+                //console.log("value already exists");
             }else if(item_name == ""){
-                console.log("value cannot be blank");
+                //console.log("value cannot be blank");
             }else{
 
                 var item_UUID = create_UUID()
@@ -100,6 +103,8 @@
 
             }
 
+            updateLocalStorage()
+
             $(".form-control").val("")
 
         };
@@ -109,7 +114,7 @@
             //var item_name = $('.form-control').val()
 
             if(ifExists(item_name)){
-                console.log("value already exists");
+                //console.log("value already exists");
                 //two people added the same item
             }else{
 
@@ -130,9 +135,11 @@
 
             }
 
+            updateLocalStorage()
+
             $(".form-control").val("")
 
-            };
+        };
 
         function removeItem(item){
 
@@ -150,6 +157,7 @@
             }
 
             dict = dict_temp
+            updateLocalStorage()
             item.remove()
         };
 
@@ -170,23 +178,42 @@
 
             skipped_dict[item.attr("Id")] = dict[item.attr("Id")]
             dict = dict_temp
+            updateLocalStorage()
             item.remove()
 
         }
 
+        function syncStart(){
+            sync = setInterval(function(){updateDatabase()},5000)
+
+        }
+
+        function syncStop(){
+            clearTimeout(sync)
+        }
+
         function initDocument(){
-            $(".form-control").keypress(function(event){if(event.keyCode == 13){addItem()}})
 
-            $.get("api/get-list").then(function(e){
+            var list = JSON.parse( localStorage.getItem('grocery-list') )
+
+            if(list == null){
+                $.get("api/get-list").then(function(e){
                    if(e == '{}'){
-
+                    //assume there are no items on list remote
                    }else{
                         var list = JSON.parse(e);
                         for (const [key, value] of Object.entries(list)) {
                             displayItem(value, key)
                         }
                    }      
-            })
+                })
+            }else{
+
+            }
+
+            $(".form-control").keypress(function(event){if(event.keyCode == 13){addItem()}})
+
+            updateLocalStorage()
         }
 
     </script>
