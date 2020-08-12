@@ -19,9 +19,9 @@
         <div class="row">
             <div class="col">
                 <div class="input-group mb-3">
-                    <input type="text" class="form-control" placeholder="Grocery Item" aria-label="Recipient's username" aria-describedby="button-addon2">
+                    <input type="text" class="form-control" placeholder="Enter item to add here" aria-label="Recipient's username" aria-describedby="button-addon2">
                     <div class="input-group-append">
-                      <button class="btn btn-outline-secondary" type="button" id="button-addon2" onclick="addItem()">add it</button>
+                      <button class="btn btn-outline-secondary" type="button" id="button-addon2" onclick="addItem()">Click to add it</button>
                     </div>
                   </div>                  
             </div>
@@ -33,15 +33,12 @@
                 </ul>
             </div>
         </div>
-        
     </div>
     <script>
 
         var dict = { }
         var skipped_dict = {}
         
-        
-
         function create_UUID(){
             var dt = new Date().getTime();
             var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -52,7 +49,18 @@
             return uuid;
         };
 
-        function updateDatabase(){};
+        function updateLocalStorage(){
+
+            localStorage.setItem('grocery-list',JSON.stringify(dict))
+
+            localStorage.setItem('skipped-list',JSON.stringify(skipped_dict))
+
+        };
+
+        function updateDatabase(){
+            
+            $.post("/api/update-list", JSON.stringify(dict))
+        };
 
         function ifExists(name){
             for(var key in dict){
@@ -75,6 +83,7 @@
             }else{
 
                 var item_UUID = create_UUID()
+                var list = $(".list-group");
 
                 dict[item_UUID] = item_name
 
@@ -86,21 +95,47 @@
                 bg.append(b).append(b2)
 
                 d.append(bg)
-                
-                //var list_item = $("<button></button>").text(item_name).addClass("list-group-item btn btn-outline-primary").attr("id",item_UUID).click(function(){removeItem(this)});
 
-                var list = $(".list-group");
-                //list.append(list_item);
                 list.append(d)
 
-                console.log(item_name+ " Created")
             }
 
             $(".form-control").val("")
 
         };
 
+        function displayItem(item_name, UUID) {
+
+            //var item_name = $('.form-control').val()
+
+            if(ifExists(item_name)){
+                console.log("value already exists");
+                //two people added the same item
+            }else{
+
+                var list = $(".list-group");
+
+                dict[UUID] = item_name
+
+                var d = $(document.createElement("div")).addClass("list-group-item lead").text(item_name).attr("id",UUID)
+                var bg = $(document.createElement("div")).addClass("btn-group float-right")
+                var b = $(document.createElement("Button")).addClass("btn btn-outline-primary").text("Got it").click(function(){removeItem(d)})
+                var b2 = $(document.createElement("Button")).addClass("btn btn-outline-primary").text("Skipped it").click(function(){skipItem(d)})
+
+                bg.append(b).append(b2)
+
+                d.append(bg)
+
+                list.append(d)
+
+            }
+
+            $(".form-control").val("")
+
+            };
+
         function removeItem(item){
+
             var item = $(item)
             var dict_temp = { };
 
@@ -115,15 +150,13 @@
             }
 
             dict = dict_temp
-
             item.remove()
         };
 
         function skipItem(item){
-            item = $(item)
-            skipped_dict[item.attr("Id")] = dict[item.attr("Id")]
-            
-            dict_temp = { };
+
+            var item = $(item)
+            var dict_temp = { };
 
             for(var key in dict){
 
@@ -135,27 +168,30 @@
                 }
             }
 
-            
-
+            skipped_dict[item.attr("Id")] = dict[item.attr("Id")]
             dict = dict_temp
-
             item.remove()
 
         }
 
         function initDocument(){
             $(".form-control").keypress(function(event){if(event.keyCode == 13){addItem()}})
+
+            $.get("api/get-list").then(function(e){
+                   if(e == '{}'){
+
+                   }else{
+                        var list = JSON.parse(e);
+                        for (const [key, value] of Object.entries(list)) {
+                            displayItem(value, key)
+                        }
+                   }      
+            })
         }
-
-        
-
-
-
-
 
     </script>
 
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.js" integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
 
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>
