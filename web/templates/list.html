@@ -104,7 +104,7 @@
             }
 
             updateLocalStorage()
-
+            syncStart()
             $(".form-control").val("")
 
         };
@@ -158,6 +158,7 @@
 
             dict = dict_temp
             updateLocalStorage()
+            syncStart()
             item.remove()
         };
 
@@ -186,6 +187,8 @@
         function syncStart(){
             sync = setInterval(function(){updateDatabase()},5000)
 
+            setTimeout(function(){syncStop()},20000)
+
         }
 
         function syncStop(){
@@ -197,10 +200,12 @@
             var list = JSON.parse( localStorage.getItem('grocery-list') )
 
             if(list == null){
+                
                 $.get("api/get-list").then(function(e){
                    if(e == '{}'){
                     //assume there are no items on list remote
                    }else{
+                        
                         var list = JSON.parse(e);
                         for (const [key, value] of Object.entries(list)) {
                             displayItem(value, key)
@@ -214,6 +219,7 @@
             $(".form-control").keypress(function(event){if(event.keyCode == 13){addItem()}})
 
             updateLocalStorage()
+
         }
 
     </script>
