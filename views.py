@@ -18,8 +18,9 @@ async def update_list(request):
     return web.Response(text = "accepted")
 
 async def get_list(request):
+    grocery_list = ''
     try:
         grocery_list = open("grocery-list.json",'rt').read()
     except FileNotFoundError:
-        grovery_list = '{}'
+        grocery_list = '{}'
     return web.Response(body = grocery_list)
