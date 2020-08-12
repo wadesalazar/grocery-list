@@ -40,6 +40,8 @@
         var skipped_dict = {}
 
         var sync
+
+        var timeout
         
         function create_UUID(){
             var dt = new Date().getTime();
@@ -187,12 +189,12 @@
         function syncStart(){
             sync = setInterval(function(){updateDatabase()},5000)
 
-            setTimeout(function(){syncStop()},20000)
+            timeout = setTimeout(function(){syncStop()},20000)
 
         }
 
         function syncStop(){
-            clearTimeout(sync)
+            clearInterval(sync)
         }
 
         function initDocument(){
